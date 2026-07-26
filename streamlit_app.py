@@ -2,7 +2,9 @@ import streamlit as st
 import time
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
+import folium
 import Myfuncs
 
 #=================================================
@@ -15,7 +17,11 @@ MAP_PATH = DATA_DIR / "interactive_map.html"
 st.set_page_config(layout="wide", page_title="AC Range — Streamlit")
 st.sidebar.title("AC Range Controls")
 
-default = Myfuncs.set_location("COM5")
+@st.cache_resource
+def load_defaults():
+    return Myfuncs.set_location("COM5")
+
+default = load_defaults()
 
 live = st.sidebar.checkbox("Live", value=default["live"])
 range_limit = st.sidebar.number_input("Range limit (miles)", value=default["range_limit"], step=1)
@@ -47,19 +53,20 @@ def generate_map():
         range_20 = Myfuncs.calculate_radar_range(rcs_sqm=100)
         range_30 = Myfuncs.calculate_radar_range(rcs_sqm=1000)
 
-        my_map = Myfuncs.plot_map(float(latitude), float(longitude), range_10, range_20, range_30)
+        my_map = folium.Map(location=[float(latitude), float(longitude)], zoom_start=9)
+        my_map = Myfuncs.plot_map(float(latitude), float(longitude), range_10, range_20, range_30, my_map)
 
         r_list = Myfuncs.filter_list(r)
+        ts = datetime.fromtimestamp(r["now"] / 1000, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
         for item in r_list:
-            radar = (float(latitude), float(longitude), float(altitude))
-            plane = (item["lat"], item["lon"], item["alt_geom"] * 0.3048)
-            masking = Myfuncs.get_masking(radar, plane, 5)
-            if any(masking):
-                Myfuncs.plot_plane(radar[0:2], plane[0:2], my_map, item, "red")
-            else:
-                Myfuncs.plot_plane(radar[0:2], plane[0:2], my_map, item, "blue")
+            item["time"] = ts
+            radar = (float(latitude), float(longitude))
+            plane = (item["lat"], item["lon"])
+            # Terrain masking skipped (too slow for interactive use)
+            Myfuncs.plot_plane(radar, plane, my_map, item, "blue", item.get("nav_heading", 0))
 
+        my_map.save(str(MAP_PATH))
         return True, f"Updated map with {len(r_list)} aircraft"
     except Exception as exc:
         return False, str(exc)

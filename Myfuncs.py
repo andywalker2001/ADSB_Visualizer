@@ -1,10 +1,8 @@
 from http.client import responses
 from urllib import response
 from matplotlib import image
-from folium.plugins import AntPath
-from PIL import Image
-
-import openmeteo_requests
+import base64
+import io
 import pyproj
 import requests
 import numpy as np
@@ -12,10 +10,11 @@ import serial
 import pynmea2
 import math
 import folium
+from folium.plugins import AntPath
+from PIL import Image
+import openmeteo_requests
 import shutil
 import ast
-
-#import geopy
 
 def calculate_slant_range(radar, plane):
     """
@@ -47,7 +46,7 @@ def calculate_slant_range(radar, plane):
     x2, y2, z2 = transformer.transform(plane[1], plane[0], plane[2])
     slant_range = np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2 + (z2 - z1) ** 2)
     
-    output = [azimuth, elevation, slant_range]   
+    output = [azimuth, elevation, slant_range, distance]
     return output
 
 def read_gps_coordinates(serial_port='COM5', baud_rate=4800, timeout=1, max_attempts=50):
@@ -125,7 +124,7 @@ def calculate_radar_range(pt_watts=250, gain_db=26, num_pulses=1000, freq_hz=2.4
     
     return max_range
 
-def call_api(latitude, longitude, altitude, limit_range="40", units="M"):
+def call_api(latitude, longitude, altitude, limit_range="75", units="M"):
     """
     Pull aircraft data from the API 75 miles or less from the given GPS coordinates.
     The default location is the corner of the field by Bowman Woods in Cedar Rapids, IA
@@ -232,15 +231,6 @@ def plot_plane (coord1, coord2, my_map, description, col = "blue", heading = 0):
     # Group the two points into a list for PolyLine
     points = [coord1, coord2]
     
-    rotate_icon(heading)  # Rotate the icon by the specified angle
-    
-    custom_icon = folium.CustomIcon(
-    icon_image=str("ac_icon_rotated.png"),  # Path to the rotated icon image
-    icon_size=(20, 20),      # Width and height of the icon in pixels
-    icon_anchor=(10, 10),    # The pixel coordinates of the image that aligns over the map coordinate
-    popup_anchor=(0, -10)    # The point from which the popup should open relative to the icon_anchor
-    )
-       
     # Create the line layer and add it to the map
     folium.PolyLine(
         locations=points,
@@ -251,6 +241,7 @@ def plot_plane (coord1, coord2, my_map, description, col = "blue", heading = 0):
     ).add_to(my_map)
 
     if heading == 0:
+        # No nav_heading available — draw a simple dot
         folium.Circle(
             location=coord2,
             radius=2,
@@ -261,10 +252,16 @@ def plot_plane (coord1, coord2, my_map, description, col = "blue", heading = 0):
             fill_opacity=0.4
         ).add_to(my_map)
     else:
+        #I previously rotated the picture to point up so I can remove this 45 degree 'un-tilt'
+        rotation = heading
         folium.Marker(
             location=coord2,
-            popup=custom_string,
-            icon=custom_icon
+            popup=folium.Popup(custom_string, max_width=300),
+            icon=folium.DivIcon(
+                html=f'<div style="font-size:20px; color:black; transform:rotate({rotation}deg); transform-origin:center;">✈</div>',
+                icon_size=(30, 30),
+                icon_anchor=(15, 15),
+            )
         ).add_to(my_map)
 
 def get_masking(coord1, coord2, num_segments):
@@ -330,7 +327,7 @@ def get_masking(coord1, coord2, num_segments):
 def filter_list(r):
     r_list = r["ac"] #Extract the list of aircraft from the API response
 
-    keys_to_keep = {"lat", "lon", "alt_geom", "flight", "nav_heading"} #Only keep the keys we need for plotting and range calculations
+    keys_to_keep = {"lat", "lon", "alt_geom", "flight", "track", "nav_heading"} #Only keep the keys we need for plotting and range calculations
     filtered_r = [{k: v for k, v in d.items() if k in keys_to_keep} for d in r_list]
     really_filtered_r = [
         d for d in filtered_r #Only keep entries that have the "alt_geom" key, since we need altitude for range calculations
@@ -358,7 +355,7 @@ def set_location(Port="COM5"):
         latitude, longitude, altitude, units = read_gps_coordinates(serial_port=Port)
         default = {
             "live": True,
-            "range_limit": 30,
+            "range_limit": 75,
             "latitude": latitude,
             "longitude": longitude,
             "altitude": altitude,
@@ -369,8 +366,8 @@ def set_location(Port="COM5"):
         print("Stopped reading GPS.")
     except Exception as exc:
         default = {
-            "live": True,
-            "range_limit": 30,
+            "live": False,  # No GPS available — default to file-based data
+            "range_limit": 75,
 
         #South of London
         #    "latitude": 50.827276295494734,
@@ -394,37 +391,45 @@ def set_location(Port="COM5"):
 
 def rotate_icon(angle):
     """
-    Rotates an image by a specified angle and saves the result.
+    Rotates an image by a specified clockwise angle (aviation convention) and
+    returns it as a base64-encoded PNG data URL so each marker embeds its own
+    image rather than sharing a single file on disk.
 
     Parameters:
-        angle (float): Angle in degrees to rotate the image counter-clockwise.
+        angle (float): Clockwise angle in degrees from North (aviation heading).
     """
     with Image.open("ac_icon.png") as img:
-        rotated_image = img.rotate((360-angle), expand=True)
-        rotated_image.save("ac_icon_rotated.png")
+        # Base icon points NE (~45°). PIL rotates counter-clockwise.
+        # To point the icon at clockwise heading H: rotate CCW by (45 - H).
+        rotated_image = img.rotate(45 - angle, expand=True)
+        buffer = io.BytesIO()
+        rotated_image.save(buffer, format="PNG")
+        b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        return f"data:image/png;base64,{b64}"
 
-def plot_vector(my_map, col = "blue"):
+def plot_vector(coord1, coord2, my_map, col = "blue"):
     """
     Plots a line on an existing map using Folium that is the vector from the sensor to the plane
     
     Parameters:
+    coord1 (float): Latitude, Longitude of the radar location
+    coord2 (float): Latitude, Longitude of the aircraft
     
     Returns:
     Nothing. Updates an interactive map called "interactive_map.html".
     """
     # Group the two points into a list for PolyLine
-    points = extract_matching_flights("./Data/output.old", "./Data/output.txt")
-    #list of list of tuples of lat/lon pairs
-    for item in points:
-        AntPath(
-            locations=points,
-            dash_array=[100, 100],
-            delay=500,
-            color=col,
-            pulse_color="white",
-            weight=1,
-            opacity=0.6
-        ).add_to(my_map)
+    points = [coord1, coord2]
+    
+    AntPath(
+        locations=points,
+        dash_array=[10, 20],
+        delay=1000,
+        color=col,
+        pulse_color="white",
+        weight=3,
+        opacity=0.8
+    ).add_to(my_map)
 
 def extract_matching_flights(file1_path, file2_path):
     """

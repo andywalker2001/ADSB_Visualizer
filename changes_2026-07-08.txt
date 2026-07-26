@@ -1,6 +1,5 @@
 CHANGE LOG — 2026-07-08
 ======================================================================================
-
 DATA DISPLAY SCRIPTS
 --------------------------------------------------------------------------------------
 NEW: Data/print_data.py
@@ -39,7 +38,7 @@ CHANGE: Added 'track' to filter_list keys and popup.
   track (actual GPS ground track) was added to the filtered aircraft data so it
   appears in popups for comparison with nav_heading.
 
-Question: why not use track if it's actually measured and accounts for say cross-
+**Question: why not use track if it's actually measured and accounts for say cross-
   wind?
 
 CHANGE: Switched rotation from track back to nav_heading, with fallback to dot.
@@ -67,9 +66,10 @@ CHANGE: Added 2D surface distance column to terminal output.
   as a new "2D Range (km)" column. The difference between slant range and 2D range
   shows how much altitude contributes to the measured distance.
 
+
 TERRAIN MASKING OPTIMIZATION (AC_Range.py / Myfuncs.py)
 --------------------------------------------------------------------------------------
-IMPROVEMENT: Adaptive segment count based on 2D distance.
+**IMPROVEMENT: Adaptive segment count based on 2D distance.
   get_masking previously used a hardcoded 5 segments regardless of path length.
   For a 100 km path that means one sample every 20 km, missing terrain features.
   For a 2 km path, 5 samples is wasteful. OpenMeteo returns ~1 km² resolution
@@ -77,7 +77,6 @@ IMPROVEMENT: Adaptive segment count based on 2D distance.
   now computed as max(1, int(distance_km)) using the 2D surface distance from
   calculate_slant_range[3]. All points are still sent in a single HTTP request to
   OpenMeteo, so there is no extra latency.
-
 
 
 app.py FIXES
@@ -157,12 +156,12 @@ NEW: app_threaded.py (copy of app.py with background masking)
 ARCHITECTURE: Two-phase map update for instant UI response.
   Phase 1 (immediate): Draws all aircraft in blue and saves the map. The /update
   route returns in ~1 second, so the browser sees aircraft appear instantly.
-  
+ 
   Phase 2 (background): A daemon thread runs after the response is sent. It:
-    - Calls get_masking() for each aircraft in parallel using ThreadPoolExecutor
-    - Waits only for the slowest API call instead of running them sequentially
-    - Redraws the map with red (terrain-masked) / blue (clear) colors
-    - Saves the updated map file
+   - Calls get_masking() for each aircraft in parallel using ThreadPoolExecutor
+   - Waits only for the slowest API call instead of running them sequentially
+   - Redraws the map with red (terrain-masked) / blue (clear) colors
+   - Saves the updated map file
   
   The browser's existing /map_ts polling (every 5 seconds) detects the file
   timestamp change and automatically reloads the map. The user sees aircraft
@@ -192,5 +191,4 @@ KEY DIFFERENCES from app.py:
   3. Masking API calls run in parallel instead of sequentially
   4. User never waits — the UI is always responsive
   5. Requires threading support (daemon threads, locks) not present in app.py
-
 
