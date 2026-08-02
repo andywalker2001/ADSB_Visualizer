@@ -5,7 +5,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 import folium
-import Myfuncs
+import MyModules
 
 #=================================================
 #Initialization
@@ -19,7 +19,7 @@ st.sidebar.title("AC Range Controls")
 
 @st.cache_resource
 def load_defaults():
-    return Myfuncs.set_location("COM5")
+    return MyModules.set_location("COM5")
 
 default = load_defaults()
 
@@ -43,20 +43,20 @@ def generate_map():
     try:
         # Acquire aircraft data
         if live:
-            r = Myfuncs.call_api(str(latitude), str(longitude), altitude, str(range_limit))
+            r = MyModules.call_api(str(latitude), str(longitude), altitude, str(range_limit))
         else:
             with open(DATA_DIR / "data.txt", "r", encoding="utf-8") as f:
                 r = eval(f.read())
 
         # Calculate range circles
-        range_10 = Myfuncs.calculate_radar_range(rcs_sqm=10)
-        range_20 = Myfuncs.calculate_radar_range(rcs_sqm=100)
-        range_30 = Myfuncs.calculate_radar_range(rcs_sqm=1000)
+        range_10 = MyModules.calculate_radar_range(rcs_sqm=10)
+        range_20 = MyModules.calculate_radar_range(rcs_sqm=100)
+        range_30 = MyModules.calculate_radar_range(rcs_sqm=1000)
 
         my_map = folium.Map(location=[float(latitude), float(longitude)], zoom_start=9)
-        my_map = Myfuncs.plot_map(float(latitude), float(longitude), range_10, range_20, range_30, my_map)
+        my_map = MyModules.plot_map(float(latitude), float(longitude), range_10, range_20, range_30, my_map)
 
-        r_list = Myfuncs.filter_list(r)
+        r_list = MyModules.filter_list(r)
         ts = datetime.fromtimestamp(r["now"] / 1000, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
         for item in r_list:
@@ -64,7 +64,7 @@ def generate_map():
             radar = (float(latitude), float(longitude))
             plane = (item["lat"], item["lon"])
             # Terrain masking skipped (too slow for interactive use)
-            Myfuncs.plot_plane(radar, plane, my_map, item, "blue", item.get("nav_heading", 0))
+            MyModules.plot_plane(radar, plane, my_map, item, "blue", item.get("nav_heading", 0))
 
         my_map.save(str(MAP_PATH))
         return True, f"Updated map with {len(r_list)} aircraft"
@@ -88,9 +88,9 @@ def tail_log(path, n=50):
 #=================================================
 #"Loop"
 #=================================================
-# Controls to run AC_Range.py continuously as a background process
-start_acr = st.sidebar.button("Start AC_Range")
-stop_acr = st.sidebar.button("Stop AC_Range")
+# Controls to run command_line_app.py continuously as a background process
+start_acr = st.sidebar.button("Start Processor")
+stop_acr = st.sidebar.button("Stop Processor")
 
 LOG_PATH = DATA_DIR / "ac_range.log"
 
@@ -101,8 +101,8 @@ if start_acr:
     if not acr_is_running():
         # open log file for append
         logf = open(LOG_PATH, "a", encoding="utf-8")
-        # launch AC_Range.py with same python executable
-        proc = subprocess.Popen([sys.executable, str(BASE_DIR / "AC_Range.py")], cwd=str(BASE_DIR), stdout=logf, stderr=logf)
+        # launch command_line.py with same python executable
+        proc = subprocess.Popen([sys.executable, str(BASE_DIR / "command_line_app.py")], cwd=str(BASE_DIR), stdout=logf, stderr=logf)
         st.session_state["acr_proc"] = proc
         st.session_state["acr_logf"] = logf
 
@@ -123,12 +123,12 @@ if stop_acr:
     st.session_state["acr_proc"] = None
     st.session_state["acr_logf"] = None
 
-# Show AC_Range status and tail of log
+# Show Processor Application status and tail of log
 if acr_is_running():
     proc = st.session_state.get("acr_proc")
-    status.success(f"AC_Range running (pid {proc.pid})")
+    status.success(f"Processor Application running (pid {proc.pid})")
 else:
-    status.info("AC_Range not running")
+    status.info("Processor Application not running")
 
 st.sidebar.markdown("### AC_Range Log")
 st.sidebar.text_area("log", value=tail_log(LOG_PATH, n=50), height=200)

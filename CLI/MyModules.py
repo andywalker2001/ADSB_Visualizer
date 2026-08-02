@@ -11,10 +11,12 @@ import pynmea2
 import math
 import folium
 from folium.plugins import AntPath
-import geopy
-import random
 from PIL import Image
 import openmeteo_requests
+import shutil
+import ast
+
+from keys import access_token as api_key
 
 def calculate_slant_range(radar, plane):
     """
@@ -124,7 +126,7 @@ def calculate_radar_range(pt_watts=250, gain_db=26, num_pulses=1000, freq_hz=2.4
     
     return max_range
 
-def call_api(latitude, longitude, altitude, limit_range="27", units="M"):
+def call_api(latitude, longitude, altitude, limit_range="75", units="M"):
     """
     Pull aircraft data from the API 75 miles or less from the given GPS coordinates.
     The default location is the corner of the field by Bowman Woods in Cedar Rapids, IA
@@ -139,7 +141,7 @@ def call_api(latitude, longitude, altitude, limit_range="27", units="M"):
     url = "https://adsbexchange-com1.p.rapidapi.com/v2/lat/" + latitude + "/lon/" + longitude + "/dist/" + limit_range + "/"
 
     headers = {
-	    "x-rapidapi-key": "a0fe71760fmsh977c0a9513c9347p10c707jsn8fa3607d5a53",
+	    "x-rapidapi-key": api_key,
 	    "x-rapidapi-host": "adsbexchange-com1.p.rapidapi.com",
 	    "Content-Type": "application/json"
     }
@@ -230,7 +232,7 @@ def plot_plane (coord1, coord2, my_map, description, col = "blue", heading = 0):
     
     # Group the two points into a list for PolyLine
     points = [coord1, coord2]
-       
+    
     # Create the line layer and add it to the map
     folium.PolyLine(
         locations=points,
@@ -252,8 +254,8 @@ def plot_plane (coord1, coord2, my_map, description, col = "blue", heading = 0):
             fill_opacity=0.4
         ).add_to(my_map)
     else:
-        # ✈ (U+2708) points NE (~45°) by default; subtract 45 so 0°=North aligns correctly
-        rotation = heading - 45
+        #I previously rotated the picture to point up so I can remove this 45 degree 'un-tilt'
+        rotation = heading
         folium.Marker(
             location=coord2,
             popup=folium.Popup(custom_string, max_width=300),
@@ -263,8 +265,6 @@ def plot_plane (coord1, coord2, my_map, description, col = "blue", heading = 0):
                 icon_anchor=(15, 15),
             )
         ).add_to(my_map)
-
-    #my_map.save(r"./Data/interactive_map.html")
 
 def get_masking(coord1, coord2, num_segments):
     """
@@ -298,7 +298,7 @@ def get_masking(coord1, coord2, num_segments):
     
     openmeteo = openmeteo_requests.Client()
 
-    url = "https://api.open-meteo.com/v1/forecast"
+    url = "https://api.open-s.com/v1/forecast"
     params = {
 	    "latitude": lats,
     	"longitude": lons,
@@ -327,6 +327,15 @@ def get_masking(coord1, coord2, num_segments):
         return ([False])
 
 def filter_list(r):
+    """
+    Filters the list of aircraft based on specific criteria, given by 'keys_to_keep' and 'really_filtered_r'.
+
+    Args:
+        r: The input dictionary containing aircraft data.
+
+    Returns:
+        r_list: The filtered list of aircraft.
+    """   
     r_list = r["ac"] #Extract the list of aircraft from the API response
 
     keys_to_keep = {"lat", "lon", "alt_geom", "flight", "track", "nav_heading"} #Only keep the keys we need for plotting and range calculations
@@ -337,22 +346,31 @@ def filter_list(r):
         ]
     r_list = really_filtered_r #Update r_list to only include the filtered entries
 
+    try:
+        shutil.copyfile("./Data/output.txt", "./Data/output.old")
+    except FileNotFoundError:
+        x = 0
+
     with open(r"./Data/output.txt", "w") as g:
-        print(r_list, file=g) #Write the filtered list of aircraft to a file for debugging purposes
+        print(r_list, file=g) #Write the filtered list of aircraft to a file
         
     return (r_list)
 
 def set_location(Port="COM5"):
     """
-    Set the location parameters in the default dictionary.
+    Sets the location parameters in the default dictionary.
 
+    Args:
+        Port (str): The serial port to read GPS coordinates from.
+
+    Returns:
+        default: The updated default dictionary with location parameters.
     """
-
     try:
         latitude, longitude, altitude, units = read_gps_coordinates(serial_port=Port)
         default = {
             "live": True,
-            "range_limit": 50,
+            "range_limit": 75,
             "latitude": latitude,
             "longitude": longitude,
             "altitude": altitude,
@@ -364,7 +382,7 @@ def set_location(Port="COM5"):
     except Exception as exc:
         default = {
             "live": False,  # No GPS available — default to file-based data
-            "range_limit": 50,
+            "range_limit": 75,
 
         #South of London
         #    "latitude": 50.827276295494734,
@@ -394,7 +412,11 @@ def rotate_icon(angle):
 
     Parameters:
         angle (float): Clockwise angle in degrees from North (aviation heading).
+        
+    Returns:
+        The rotated image as a base64-encoded PNG data URL.
     """
+    
     with Image.open("ac_icon.png") as img:
         # Base icon points NE (~45°). PIL rotates counter-clockwise.
         # To point the icon at clockwise heading H: rotate CCW by (45 - H).
@@ -428,4 +450,49 @@ def plot_vector(coord1, coord2, my_map, col = "blue"):
         opacity=0.8
     ).add_to(my_map)
 
+def extract_matching_flights(file1_path, file2_path):
+    """
+    Finds matching flights between two files and outputs a new file 
+    containing pairs of (lat, lon) coordinates for those flights.
+    
+    Parameters:
+    file1_path (str): Path to the first input file.
+    file2_path (str): Path to the second input file.
+    
+    Returns:
+    matching_pairs: A list of tuples containing matching flight coordinates.
+    """
+    # Read and safely parse the content of the first file
+    with open(file1_path, "r", encoding="utf-8") as f1:
+        data1 = ast.literal_eval(f1.read())
 
+    # Read and safely parse the content of the second file
+    with open(file2_path, "r", encoding="utf-8") as f2:
+        data2 = ast.literal_eval(f2.read())
+
+    # Map stripped flight identifiers to their coordinates for quick lookup
+    # .strip() removes trailing/leading spaces (e.g., 'SKW330Z ' -> 'SKW330Z')
+    flights1 = {
+        item["flight"].strip(): (item["lat"], item["lon"])
+        for item in data1
+        if "flight" in item and "lat" in item and "lon" in item
+    }
+
+    matching_pairs = []
+
+    # Check for matches in the second dataset
+    for item in data2:
+        if "flight" in item and "lat" in item and "lon" in item:
+            flight_id = item["flight"].strip()
+
+            # If the flight exists in both files, pair the coordinates
+            if flight_id in flights1:
+                coords1 = flights1[flight_id]
+                coords2 = (item["lat"], item["lon"])
+                matching_pairs.append([coords1, coords2])
+
+    return (matching_pairs)
+
+# protect module from being run directly (i.e as main files)  
+if __name__ == "__main__":
+    print("Do not run this module directly, run main.py instead.") 

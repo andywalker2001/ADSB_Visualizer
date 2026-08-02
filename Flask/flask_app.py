@@ -5,12 +5,12 @@ import threading
 import folium
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
-import Myfuncs
+import MyModules
 
 app = Flask(__name__)
 
-# Defaults (from AC_Range.py)
-defaults = Myfuncs.set_location("COM5")
+# Defaults (from command_line_app.py)
+defaults = MyModules.set_location("COM5")
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "Data")
 MAP_PATH = os.path.join(DATA_DIR, "interactive_map.html")
@@ -36,14 +36,14 @@ def _apply_masking_background(r_list, ts, snap, range_10, range_20, range_30):
         lat, lon, alt = snap["latitude"], snap["longitude"], snap["altitude"]
 
         my_map = folium.Map(location=[lat, lon], zoom_start=9)
-        my_map = Myfuncs.plot_map(lat, lon, range_10, range_20, range_30, my_map)
+        my_map = MyModules.plot_map(lat, lon, range_10, range_20, range_30, my_map)
 
         def mask_one(item):
             radar3 = (lat, lon, alt)
             plane3 = (item["lat"], item["lon"], item["alt_geom"] * 0.3048)
-            sr = Myfuncs.calculate_slant_range(radar3, plane3)
+            sr = MyModules.calculate_slant_range(radar3, plane3)
             num_seg = max(1, int(sr[3] / 1000))
-            masked = any(Myfuncs.get_masking(radar3, plane3, num_seg))
+            masked = any(MyModules.get_masking(radar3, plane3, num_seg))
             return item, masked
 
         # Run all masking calls in parallel — wait for slowest one only
@@ -54,7 +54,7 @@ def _apply_masking_background(r_list, ts, snap, range_10, range_20, range_30):
         for item, masked in results:
             col = "red" if masked else "blue"
             plane2 = (item["lat"], item["lon"])
-            Myfuncs.plot_plane(radar2, plane2, my_map, item, col, item.get("nav_heading", 0))
+            MyModules.plot_plane(radar2, plane2, my_map, item, col, item.get("nav_heading", 0))
 
         with _map_lock:
             my_map.save(MAP_PATH)
@@ -86,29 +86,29 @@ def update():
             defaults["altitude"] = float(payload.get("altitude"))
 
         # Recalculate ranges
-        range_10 = Myfuncs.calculate_radar_range(rcs_sqm=10)
-        range_20 = Myfuncs.calculate_radar_range(rcs_sqm=100)
-        range_30 = Myfuncs.calculate_radar_range(rcs_sqm=1000)
+        range_10 = MyModules.calculate_radar_range(rcs_sqm=10)
+        range_20 = MyModules.calculate_radar_range(rcs_sqm=100)
+        range_30 = MyModules.calculate_radar_range(rcs_sqm=1000)
 
         # Create a fresh map and draw range circles
         my_map = folium.Map(location=[defaults["latitude"], defaults["longitude"]], zoom_start=9)
-        my_map = Myfuncs.plot_map(defaults["latitude"], defaults["longitude"], range_10, range_20, range_30, my_map)
+        my_map = MyModules.plot_map(defaults["latitude"], defaults["longitude"], range_10, range_20, range_30, my_map)
 
         # Fetch aircraft data
         if defaults["live"]:
-            r = Myfuncs.call_api(str(defaults["latitude"]), str(defaults["longitude"]), defaults["altitude"], str(defaults["range_limit"]))
+            r = MyModules.call_api(str(defaults["latitude"]), str(defaults["longitude"]), defaults["altitude"], str(defaults["range_limit"]))
         else:
             with open(os.path.join(DATA_DIR, "data.txt"), "r", encoding="utf-8") as f:
                 r = ast.literal_eval(f.read())
 
         # Plot all aircraft immediately in blue and save — returns fast
-        r_list = Myfuncs.filter_list(r)
+        r_list = MyModules.filter_list(r)
         ts = datetime.fromtimestamp(r["now"] / 1000, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
         radar = (defaults["latitude"], defaults["longitude"])
         for item in r_list:
             item["time"] = ts
             plane = (item["lat"], item["lon"])
-            Myfuncs.plot_plane(radar, plane, my_map, item, "blue", item.get("nav_heading", 0))
+            MyModules.plot_plane(radar, plane, my_map, item, "blue", item.get("nav_heading", 0))
 
         with _map_lock:
             my_map.save(MAP_PATH)

@@ -16,6 +16,8 @@ import openmeteo_requests
 import shutil
 import ast
 
+from keys import access_token as api_key
+
 def calculate_slant_range(radar, plane):
     """
     Calculates the 3D slant range between two points.
@@ -139,7 +141,7 @@ def call_api(latitude, longitude, altitude, limit_range="75", units="M"):
     url = "https://adsbexchange-com1.p.rapidapi.com/v2/lat/" + latitude + "/lon/" + longitude + "/dist/" + limit_range + "/"
 
     headers = {
-	    "x-rapidapi-key": "a0fe71760fmsh977c0a9513c9347p10c707jsn8fa3607d5a53",
+	    "x-rapidapi-key": api_key,
 	    "x-rapidapi-host": "adsbexchange-com1.p.rapidapi.com",
 	    "Content-Type": "application/json"
     }
@@ -296,7 +298,7 @@ def get_masking(coord1, coord2, num_segments):
     
     openmeteo = openmeteo_requests.Client()
 
-    url = "https://api.open-meteo.com/v1/forecast"
+    url = "https://api.open-s.com/v1/forecast"
     params = {
 	    "latitude": lats,
     	"longitude": lons,
@@ -325,6 +327,16 @@ def get_masking(coord1, coord2, num_segments):
         return ([False])
 
 def filter_list(r):
+    """
+    Filters the list of aircraft based on specific criteria, given by 'keys_to_keep' and 'really_filtered_r'.
+
+    Args:
+        r: The input dictionary containing aircraft data.
+
+    Returns:
+        r_list: The filtered list of aircraft.
+    """
+    
     r_list = r["ac"] #Extract the list of aircraft from the API response
 
     keys_to_keep = {"lat", "lon", "alt_geom", "flight", "track", "nav_heading"} #Only keep the keys we need for plotting and range calculations
@@ -347,8 +359,13 @@ def filter_list(r):
 
 def set_location(Port="COM5"):
     """
-    Set the location parameters in the default dictionary.
+    Sets the location parameters in the default dictionary.
 
+    Args:
+        Port (str): The serial port to read GPS coordinates from.
+
+    Returns:
+        default: The updated default dictionary with location parameters.
     """
 
     try:
@@ -397,7 +414,11 @@ def rotate_icon(angle):
 
     Parameters:
         angle (float): Clockwise angle in degrees from North (aviation heading).
+        
+    Returns:
+        The rotated image as a base64-encoded PNG data URL.
     """
+    
     with Image.open("ac_icon.png") as img:
         # Base icon points NE (~45°). PIL rotates counter-clockwise.
         # To point the icon at clockwise heading H: rotate CCW by (45 - H).
@@ -474,3 +495,6 @@ def extract_matching_flights(file1_path, file2_path):
 
     return (matching_pairs)
 
+# protect module from being run directly (i.e as main files)  
+if __name__ == "__main__":
+    print("Do not run this module directly, run main.py instead.") 
