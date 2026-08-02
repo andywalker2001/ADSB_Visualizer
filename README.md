@@ -1,9 +1,5 @@
 <img width="1675" height="463" alt="Header" src="https://github.com/user-attachments/assets/411a0a07-8429-4ccc-8340-4b4c482c1a4e" />
  
-Aircraft Data Visualization
-
-## Review of Version Two / HCI584 / Andy Walker
-
 ### Project Introduction
 
 In the past, radar research has been limited to large companies and those with exceptional budgets. However, Amateur Radio enthusiasts are increasingly able to buy and build capable microwave systems for communications, sharing of data, and sensing of obstacles. These capabilities are primed to push amateur electronics into the realm of real microwave sensors like radars. Radars use radio signals to detect and track ætargetsÆ in their field of view, and larger targets make for easier, more certain detections. Commercial aircraft provide excellent targets of opportunity for such a system. They are physically and electrically large, they move at high speed and broadcast their position regularly via radio links that can be used to provide a source of truth for the hobbyist measurement. This enables educational radar training by providing a test bed for unclassified, amateur radio compatible radar. This project captures the broadcast position data and maps it relative to the sensor location to provide ætargets of opportunityÆ to the sensor.
@@ -29,13 +25,6 @@ Figure 1: HTML Interface Hosted by Streamlit
 Figure 2: HTML Interface with Side Panel Extended
 
 <img width="1478" height="507" alt="Figure_3" src="https://github.com/user-attachments/assets/cf8e180a-79dc-4888-a13f-c28a8bed06c2" />
-
-Figure 3:
-
-
-Figure 4: 
-
-
 
 ### APIs Used
 
