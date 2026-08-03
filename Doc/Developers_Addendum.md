@@ -8,25 +8,27 @@ The command line application can be found in the ./CLI folder and can be invoked
 
 ``python .\command\_line\_app.py``
 
-Figure 3 gives example output, tabulated for easy reading.
+<img width="1478" height="507" alt="Figure_3" src="https://github.com/user-attachments/assets/764c14c1-07bc-4db7-bf42-7297591ec27e" />
 
-![](data:image/png;base64...)
-
-Figure : Example Output from CLI Version
+Figure 1: Gives example output, tabulated for easy reading.
 
 The output uses Lat/Lon/Altitude to each aircraft to produce an Azimuth and Elevation pointing angle from the sensor to the aircraft. A Slant Range to the aircraft is also calculated to give an approximate location in 3-space of the aircraft to guide the sensor. The æmaskedÆ indicator gives a sense of whether the aircraft should be visible to the sensor or not due to terrain masked, and the time stamp returns the time of the measurement.
 
 The flask applications builds on the command line script, plotting the data of the aircraft with hotspot popups on a moving map. Invoking flask should yield output as shown in Figure 4.
 
-![](data:image/png;base64...)
+<img width="1204" height="697" alt="Figure_4" src="https://github.com/user-attachments/assets/41cb9440-b5fe-4241-807f-a6dc452f53c8" />
 
-Figure : Expected Flask Server Invocation and Output
+Figure 2: Example Output from CLI Version
 
 Figure 5 shows the hosted web page from the Flask server. As can be seen in the figure, no controls are available on the Flask served page, instead simply showing the location of the aircraft with their respective popups.
 
-![](data:image/png;base64...)
 
-Figure : Flask Application User Interface
+
+Figure : Expected Flask Server Invocation and Output
+
+<img width="1131" height="694" alt="Figure_5" src="https://github.com/user-attachments/assets/228f342c-54b8-4e48-801c-492996d295a8" />
+
+Figure 3: Flask Application User Interface
 
 ### Command Line Functionality
 
