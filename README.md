@@ -20,17 +20,12 @@ Once finished successfully, the final version should be started with:
 
 This should automatically open a web browser window that looks like Figure 1 and Figure 2.
 
-###How to use
+### How to use
 
 In the Streamlit user interface, the primary map interface is front and center. The map provides range 
 rings that illustrate the range at which the nominal sensor should detect targets of 10dB square 
-Aircraft Data Visualization 
-Andy Walker / HCI584 / Summer 2026 
-meters (Green), 20dB square meters (Yellow), and 30dB square meters (Red). For reference, a 
-10dB-SM target is a typical commuter aircraft, depending on the angle it presents to the sensor. A 20 
-dB-SM target is a very large aircraft like a 747 or B-52, again depending on the angle to the sensor. 
-Finally, a 30 dB-SM target is the size of a battleship, impossibly large for airborne targets but possible 
-for some intentional targets like corner reflectors. 
+Aircraft Data Visualization meters (Green), 20dB square meters (Yellow), and 30dB square meters (Red). For reference, a 10dB-SM target is a typical commuter aircraft, depending on the angle it presents to the sensor. A 20 dB-SM target is a very large aircraft like a 747 or B-52, again depending on the angle to the sensor. Finally, a 30 dB-SM target is the size of a battleship, impossibly large for airborne targets but possible for some intentional targets like corner reflectors.
+
 To the side, buttons are present to configure range details of the aircraft plotter (1), the automatic 
 map updating (2), start and stop the background application (3), and the log of the background 
 process (4). In (1), the latitude, longitude, and altitude mark the location of the sensor (the nominal 
