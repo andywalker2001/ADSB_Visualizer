@@ -45,7 +45,3 @@ This API requires no key to extract elevation information. The returned data is 
 ### Developers Adendum:
 
 Additional details are available in the “Developers_Addendum.md” file in the /Doc folder 
-
-def rotate\_icon(angle): Rotates a PNG icon to a an angle specified by the caller and saves (overwrites) the newly rotated image for use as an icon on a map.
-
-def plot\_vector(coord1, coord2, my\_map, col = "blue"): Takes as input the location of an aircraft along with itÆs last location to generate a ætrail of antsÆ vector that points in the direction of travel. WIP.
