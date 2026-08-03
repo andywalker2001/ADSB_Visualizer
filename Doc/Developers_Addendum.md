@@ -56,7 +56,7 @@ Developers interested in using this work can directly utilize the functions avai
 
 **def rotate\_icon(angle):** Rotates a PNG icon to an angle specified by the caller and saves (overwrites) the newly rotated image for use as an icon on a map.
 
-**def plot\_vector(coord1, coord2, my\_map, col = "blue"):** Takes as input the location of an aircraft along with itÆs last location to generate a ætrail of antsÆ vector that points in the direction of travel. WIP.
+**def plot\_vector(coord1, coord2, my\_map, col = "blue"):** Takes as input the location of an aircraft along with itÆs last location to generate a "trail of ants" vector that points in the direction of travel. WIP.
 
 **def extract\_matching\_flights(file1\_path, file2\_path):** Finds matching flights between two files and outputs a new file containing pairs of (lat, lon) coordinates for those flights.
 
