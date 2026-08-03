@@ -255,7 +255,7 @@ def plot_plane (coord1, coord2, my_map, description, col = "blue", heading = 0):
         ).add_to(my_map)
     else:
         #I previously rotated the picture to point up so I can remove this 45 degree 'un-tilt'
-        rotation = heading
+        rotation = heading-90
         folium.Marker(
             location=coord2,
             popup=folium.Popup(custom_string, max_width=300),
