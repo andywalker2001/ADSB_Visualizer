@@ -8,9 +8,9 @@ The command line application can be found in the ./CLI folder and can be invoked
 
 ``python .\command\_line\_app.py``
 
-<img width="1478" height="507" alt="Figure_3" src="https://github.com/user-attachments/assets/764c14c1-07bc-4db7-bf42-7297591ec27e" />
-
 Figure 1 gives example output, tabulated for easy reading.  
+
+<img width="1478" height="507" alt="Figure_3" src="https://github.com/user-attachments/assets/764c14c1-07bc-4db7-bf42-7297591ec27e" />
 
 **Figure 1:** Example Output from CLI Version 
 
