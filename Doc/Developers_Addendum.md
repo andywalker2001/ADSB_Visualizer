@@ -17,19 +17,20 @@ Figure 1 gives example output, tabulated for easy reading.
 The output uses Lat/Lon/Altitude to each aircraft to produce an Azimuth and Elevation pointing angle from the sensor to the aircraft. A Slant Range to the aircraft is also calculated to give an approximate location in 3-space of the aircraft to guide the sensor. The "masked" indicator gives a sense of whether the aircraft should be visible to the sensor or not due to terrain masked, and the time stamp returns the time of the measurement.
 
 A basic flow of the command line code is as follows:
-&emsp 1) Variables are setup and initialized
 
-&emsp 2) The ADSB API is called and the data is retrieved
+  1) Variables are setup and initialized
 
-&emsp 3) The map is created if not and the range rings are plotted
+  2) The ADSB API is called and the data is retrieved
 
-&emsp 4) The data is processed for each aircraft
+  3) The map is created if not and the range rings are plotted
 
-&emsp 5) The terrain API is called with the calculated vectors, divvied up into 'number' segments
+  4) The data is processed for each aircraft
 
-&emsp 6) The aircraft are plotted on the map, colored with their status as 'masked' or not
+  5) The terrain API is called with the calculated vectors, divvied up into 'number' segments
 
-&emsp 7) Repeat
+  6) The aircraft are plotted on the map, colored with their status as 'masked' or not
+  
+  7) Repeat
 
 The flask applications builds on the command line script, plotting the data of the aircraft with hotspot popups on a moving map. Invoking flask should yield output as shown in Figure 2.
 
