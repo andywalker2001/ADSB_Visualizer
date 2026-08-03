@@ -52,7 +52,7 @@ ADS-B Exchange is the world's largest independent and unfiltered global flight t
 This API can be used with or without a key. However, responsiveness is greatly improved via a low-cost API key subscription. This key should be placed in the ‘keys.py’ file in the root directory of the 
 project in “double quotes”. That key is then referenced in main.py via the 
 
-``from keys import access_token as api_key`` 
+from keys import access_token as api_key
 
 reference. 
 
