@@ -45,13 +45,18 @@ Figure 2: HTML Interface with Side Panel Extended
 
 To plot this date, 2 APIs are used. The first is provides the ADSB data of the aircraft in the area, and the second provides topographic maps from which terrain masking is extracted.
 
-https://globe.adsbexchange.com/
+**https://globe.adsbexchange.com/**
 
 ADS-B Exchange is the world's largest independent and unfiltered global flight tracking data network, providing unmitigated civil and military flight tracking data. It operates via a crowdsourced community of feeders sharing raw receiver data without filtering out specific aircraft. The platform focuses on raw data access without FAA-compliance filtering or requested blockings for military and private aircraft provided by global volunteers hosting hardware receivers feeding real-time positional data (latitude, longitude, altitude, and velocity) into the collective map.
 
-This API can be used with or without a key. However, responsiveness is greatly improved via a low-cost API key subscription.
+This API can be used with or without a key. However, responsiveness is greatly improved via a low-cost API key subscription. This key should be placed in the ‘keys.py’ file in the root directory of the 
+project in “double quotes”. That key is then referenced in main.py via the 
 
-https://open-meteo.com/en/features
+``from keys import access_token as api_key`` 
+
+reference. 
+
+**https://open-meteo.com/en/features**
 
 OpenMeteo provides a wide range of weather-related data via an easy to use API. Among the interfaces provided is an Elevation API providing access to a terrain database that returns the terrain elevation at the provided coordinates. Terrain elevation is provided in meters for any set of WGS84 coordinates using a 90 m resolution digital elevation model and accepts batches of up to 100 coordinate pairs per request.
 
