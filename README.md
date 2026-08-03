@@ -24,8 +24,6 @@ Figure 1: HTML Interface Hosted by Streamlit
 
 Figure 2: HTML Interface with Side Panel Extended
 
-<img width="1478" height="507" alt="Figure_3" src="https://github.com/user-attachments/assets/cf8e180a-79dc-4888-a13f-c28a8bed06c2" />
-
 ### APIs Used
 
 To plot this date, 2 APIs are used. The first is provides the ADSB data of the aircraft in the area, and the second provides topographic maps from which terrain masking is extracted.
