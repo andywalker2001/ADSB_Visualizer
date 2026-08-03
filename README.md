@@ -44,53 +44,7 @@ This API requires no key to extract elevation information. The returned data is 
 
 ### Developers Adendum:
 
-This project includes 3 different versions of the application, one command line, one using flask and focused on Streamlit. The Streamlit app is the main.py application. However the other versions are included to ease inclusion in other, larger projects.
-
-The command line application can be found in the ./CLI folder and can be invoked with:
-
-``python .\command\_line\_app.py``
-
-Figure 3 gives example output, tabulated for easy reading.
-
-![](data:image/png;base64...)
-
-Figure : Example Output from CLI Version
-
-The output uses Lat/Lon/Altitude to each aircraft to produce an Azimuth and Elevation pointing angle from the sensor to the aircraft. A Slant Range to the aircraft is also calculated to give an approximate location in 3-space of the aircraft to guide the sensor. The æmaskedÆ indicator gives a sense of whether the aircraft should be visible to the sensor or not due to terrain masked, and the time stamp returns the time of the measurement.
-
-The flask applications builds on the command line script and plots the data of the aircraft with hotspot popups on a moving map. Invoking the flask application and the expected output is shown in Figure 4.
-
-![](data:image/png;base64...)
-
-Figure : Expected Flask Server Invocation and Output
-
-Figure 5 shows the hosted web page from the Flask server. As can be seen in the figure, no controls are available on the Flask served page, instead simply showing the location of the aircraft with their respective popups.
-
-![](data:image/png;base64...)
-
-Figure : Flask Application User Interface
-
-### Command Line Functionality
-
-**Functions Implemented:**
-
-def calculate\_slant\_range(radar, plane): Calculates the azimuth and elevation angles from the sensor location to the aircraft as well as a slant range. The slant range is the range that the sensor would need to detect and track over.
-
-def read\_gps\_coordinates(serial\_port='COM5', baud\_rate=4800, timeout=1, max\_attempts=50): Reads the location of the sensor from a GPS receiver on COM5 (default). This output will be refined with information from the Iowa Real Time Kinematic Network in future work.
-
-def calculate\_radar\_range(pt\_watts=250, gain\_db=26, num\_pulses=1000, freq\_hz=2.45e9, rcs\_sqm=1.0, s\_min\_watts=1e-13, loss\_db=0): Calculate the effective range of the sensor given 1000 coherenet pulses. This is the equation used to generate the range æstop-lightÆ rings shown on the map.
-
-def call\_api(latitude, longitude, altitude, limit\_range="27", units="M"): Collects the data from the ADS-B API.
-
-**d**ef plot\_map (latitude, longitude, range\_10, range\_20, range\_30, my\_map): Initializes æmy\_mapÆ and plots the range rings that show what aircraft are within detection range of the sensor.
-
-def plot\_plane (coord1, coord2, my\_map, description, col = "blue"): Plots the locations of the planes. One of the next steps is to add unobtrusive persistence to this plotting.
-
-def get\_masking(coord1, coord2, num\_segments): Calculates the elevation at each point along a line projected on the ground between the sensor and the aircraft. If any of the elevations are higher than the elevation of the line of sight between the sensor and the aircraft, the line of sight is marked æmaskedÆ and the aircraft is plotted in red to show that it is probably not visible to the sensor.
-
-def filter\_list(r): Consumes the JSON file ærÆ and filters out the information from the ADS-B return that is used in the subsequent processing. Altitude, latitude, and longitude are copied from input to output. Heading is available but not used; instead the tracking algorithm should use a æplausibility circleÆ to determine which aircraft past state corresponds to which aircraft current state.
-
-def set\_location(Port="COM5"): Has become the single function for defining the location of the center node. Accommodates GPS coordinates or variable defaults. Applies to AC\_Range.py, app.py, and streamlit\_app.py
+Additional details are available in the “Developers_Addendum.md” file in the /Doc folder 
 
 def rotate\_icon(angle): Rotates a PNG icon to a an angle specified by the caller and saves (overwrites) the newly rotated image for use as an icon on a map.
 
