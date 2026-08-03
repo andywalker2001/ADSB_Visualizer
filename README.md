@@ -10,7 +10,11 @@ Install the unique requirements by opening a terminal in the folder where the fi
 
 ``pip install -r requirements.txt``
 
-This will install the non-standard libraries that this project requires. Once finished successfully, the final version should be started with:
+This will install the non-standard libraries that this project requires. Keys are not required but do make the ADSB API data pulls much more responsive. More can be found on getting ADSB API keys at 
+https://rapidapi.com/adsbx/api/adsbexchange-com1. Instructions on using the API are detailed later. 
+
+
+Once finished successfully, the final version should be started with: 
 
 ``streamlit run .\main.py``
 
